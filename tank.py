@@ -19,7 +19,7 @@ def update(space, dt, surface):
     mouse_delta = mouse_pos - tank_body.position
     turn = tank_body.rotation_vector.cpvunrotate(mouse_delta).angle
     tank_control_body.angle = tank_body.angle - turn
-
+    print(turn)
     # drive the tank towards the mouse
     if (mouse_pos - tank_body.position).get_length_sqrd() < 30 ** 2:
         tank_control_body.velocity = 0, 0

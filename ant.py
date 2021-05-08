@@ -18,8 +18,8 @@ RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 
 image=pygame.image.load('ant.png')
-# image=pygame.transform.scale(image,(50,50))
-
+image=pygame.transform.scale(image,(40,60))
+pointer_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
 class Segment:
     def __init__(self, p0, v, radius=10):
         self.body = pymunk.Body()
@@ -44,18 +44,29 @@ class Box:
 
 class Ant:
     def __init__(self, pos, radius=20):
-        size = (50,50)
-        mass = 10.0
+        size = (60,40)
+        mass = 1.0
         moment = pymunk.moment_for_box(mass, size)
         self.body = pymunk.Body(mass, moment)
         self.body.position = pos
         self.shape = pymunk.Poly.create_box(self.body, size)
-        # shape.friction = 0.3
+        self.shape.friction = 0.3
+        
+        # rest_angle = math.pi
+        # stiffness = 1000
+        # damping = 1000.0
+
+        # rotary_spring = pymunk.constraints.DampedRotarySpring(
+        # pointer_body, self.body, rest_angle, stiffness, damping
+        # )
+        # force_spring=pymunk.constraints.DampedSpring(
+        #     pointer_body, self.body, pointer_body.position, (30,0), 0, stiffness, damping
+        # )
         space.add(self.body, self.shape)
         # self.body = pymunk.Body(mass=1, moment=1000)
         
         # self.body.position = pos
-        self.body.apply_impulse_at_local_point((500, 0), (0, 5))
+        # self.body.apply_impulse_at_local_point((50, 50), (30, 0))
 
         # self.shape = pymunk.Segment(self.body, (-50, 0), (50, 0),radius)
         self.shape.elasticity = 0.999
@@ -65,7 +76,6 @@ class Ant:
 class App:
     def __init__(self):
         pygame.init()
-        self.i=0
         self.screen = pygame.display.set_mode(size)
         self.draw_options = DrawOptions(self.screen)
         self.active_shape = None
@@ -91,26 +101,46 @@ class App:
         elif event.type == KEYDOWN:
             if event.key in (K_q, K_ESCAPE):
                 self.running = False
+        # elif event.type == pygame.MOUSEMOTION:
+        #         mouse_pos = pymunk.pygame_util.get_mouse_pos(self.screen)
+        #         pointer_body.position = mouse_pos
+        #         pointer_body.angle = (pointer_body.position - ant.body.position).angle
+                # print(pointer_body.angle)
 
+    def update(self):
+
+        # if (mouse_pos - tank_body.position).get_length_sqrd() < 30 ** 2:
+        #     tank_control_body.velocity = 0, 0
+        # else:
+        # if mouse_delta.dot(tank_body.rotation_vector) > 0.0:
+        #     direction = 1.0
+        # else:
+        #     direction = -1.0
+        # dv = Vec2d(30.0 * direction, 0.0)
+        # ant.body.velocity = ant.body.rotation_vector.cpvrotate(dv)
+        # angle = (pointer_body - tank_body.position).angle
+        mpos = pygame.mouse.get_pos()
+        mouse_pos = pymunk.pygame_util.from_pygame(Vec2d(*mpos), self.screen)
+        mouse_delta = mouse_pos - ant.body.position
+        turn = ant.body.rotation_vector.cpvunrotate(mouse_delta).angle
+        ant.body.angle=ant.body.angle-turn
+        dv = Vec2d(30.0, 0.0)
+        ant.body.velocity = ant.body.rotation_vector.cpvrotate(dv)
 
     def draw(self):
-        def cal_angle(shape):
-            x=shape.a[0]-shape.b[0]
-            y=shape.a[1]-shape.b[1]
-            return math.atan(y/x)
         self.screen.fill(GRAY)
         space.debug_draw(self.draw_options)
-        # print(ant.body.angle)
-        # ant.shape.update()
-        self.i+=1
-        rotated_image = pygame.transform.rotate(image, -ant.body.angle/math.pi*180)
+        rotated_image = pygame.transform.rotate(image, -ant.body.angle/math.pi*180-90)
         # rotated_image = pygame.transform.rotate(image, 20)
         # pygame.draw.circle(self.screen,(255,255,0),(int(ant.body.position[0]),int(ant.body.position[1])),2)
         # rotated_image.get_rect(center = image.get_rect(center = (x, y)).center)
+        self.update()
         x,y=(int(ant.body.position[0]),int(ant.body.position[1]))
         rotated_rec = rotated_image.get_rect(center = rotated_image.get_rect(center = (x,y)).center)
         self.screen.blit(rotated_image,rotated_rec)
         pygame.display.update()
+
+        
         
     def draw_bb(self, shape):
         pos = shape.bb.left, shape.bb.top

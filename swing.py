@@ -32,7 +32,7 @@ def main():
     gun_body.position = Vec2d(300, 300)
     gun_shape = pymunk.Poly(gun_body, ps)
 
-    rest_angle = 0
+    rest_angle = 180
     stiffness = 125000.0
     damping = 6000.0
 
