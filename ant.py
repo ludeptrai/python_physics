@@ -1,7 +1,7 @@
 import pymunk
 from pymunk.pygame_util import *
 from pymunk.vec2d import Vec2d
-
+import math
 import pygame
 from pygame.locals import *
 
@@ -17,8 +17,8 @@ GRAY = (220, 220, 220)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 
-image=pygame.image.load('ball.png')
-image=pygame.transform.scale(image,(50,50))
+image=pygame.image.load('ant.png')
+# image=pygame.transform.scale(image,(50,50))
 
 class Segment:
     def __init__(self, p0, v, radius=10):
@@ -44,17 +44,28 @@ class Box:
 
 class Ant:
     def __init__(self, pos, radius=20):
-        self.body = pymunk.Body(mass=1, moment=1000)
+        size = (50,50)
+        mass = 10.0
+        moment = pymunk.moment_for_box(mass, size)
+        self.body = pymunk.Body(mass, moment)
         self.body.position = pos
-        self.body.apply_impulse_at_local_point((100, 0), (0, 1))
+        self.shape = pymunk.Poly.create_box(self.body, size)
+        # shape.friction = 0.3
+        space.add(self.body, self.shape)
+        # self.body = pymunk.Body(mass=1, moment=1000)
+        
+        # self.body.position = pos
+        self.body.apply_impulse_at_local_point((500, 0), (0, 5))
 
-        shape = pymunk.Segment(self.body, (-50, 0), (50, 0),radius)
-        shape.elasticity = 0.999
-        space.add(self.body, shape)
+        # self.shape = pymunk.Segment(self.body, (-50, 0), (50, 0),radius)
+        self.shape.elasticity = 0.999
+        # space.add(self.body, self.shape)
+        # print(self.body.position)
 
 class App:
     def __init__(self):
         pygame.init()
+        self.i=0
         self.screen = pygame.display.set_mode(size)
         self.draw_options = DrawOptions(self.screen)
         self.active_shape = None
@@ -83,8 +94,22 @@ class App:
 
 
     def draw(self):
+        def cal_angle(shape):
+            x=shape.a[0]-shape.b[0]
+            y=shape.a[1]-shape.b[1]
+            return math.atan(y/x)
         self.screen.fill(GRAY)
         space.debug_draw(self.draw_options)
+        # print(ant.body.angle)
+        # ant.shape.update()
+        self.i+=1
+        rotated_image = pygame.transform.rotate(image, -ant.body.angle/math.pi*180)
+        # rotated_image = pygame.transform.rotate(image, 20)
+        # pygame.draw.circle(self.screen,(255,255,0),(int(ant.body.position[0]),int(ant.body.position[1])),2)
+        # rotated_image.get_rect(center = image.get_rect(center = (x, y)).center)
+        x,y=(int(ant.body.position[0]),int(ant.body.position[1]))
+        rotated_rec = rotated_image.get_rect(center = rotated_image.get_rect(center = (x,y)).center)
+        self.screen.blit(rotated_image,rotated_rec)
         pygame.display.update()
         
     def draw_bb(self, shape):
@@ -100,5 +125,5 @@ if __name__ == '__main__':
     r = 20
     x = random.randint(r, w-r)
     y = random.randint(r, h-r)
-    Ant((x, y),r)
+    ant=Ant((x, y),r)
     App().run()
